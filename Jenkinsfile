@@ -26,8 +26,8 @@ pipeline {
  stage('Deploy to Azure') {
  steps {
  withCredentials([azureServicePrincipal('azure-service-principal')]) {
- bat 'az login --service-principal -u $AZURE_CREDENTIALS_USR -p 
-$AZURE_CREDENTIALS_PSW --tenant $AZURE_CREDENTIALS_TEN'
+ bat 'az login --service-principal -u $AZURE_CREDENTIALS_USR -p'
+'$AZURE_CREDENTIALS_PSW --tenant $AZURE_CREDENTIALS_TEN'
  bat 'az group create --name myResourceGroup --location eastus'
  bat 'az webapp create --name myAppService --resource-group 
 myResourceGroup --plan myAppPlan --runtime "DOTNETCORE:8.0"'
