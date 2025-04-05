@@ -10,8 +10,8 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // Update branch to 'main' if that's your repo's default
-                git branch: 'main', url: 'https://github.com/Avinash739jecrc/jenkinrepo'
+                // ✅ FIXED: Use correct branch name
+                git branch: 'master', url: 'https://github.com/Avinash739jecrc/jenkinrepo'
             }
         }
 
@@ -25,7 +25,7 @@ pipeline {
 
         stage('Zip Artifact') {
             steps {
-                // IMPORTANT: Zip only contents of the folder, not the folder itself
+                // ✅ FIXED: Ensure contents are zipped correctly for Azure
                 bat 'powershell -Command "Compress-Archive -Path publish\\* -DestinationPath publish.zip -Force"'
             }
         }
@@ -33,6 +33,7 @@ pipeline {
         stage('Deploy to Azure') {
             steps {
                 withCredentials([azureServicePrincipal(credentialsId: AZURE_CREDENTIALS_ID)]) {
+                    // ✅ FIXED: Use %VAR% for batch scripts
                     bat '''
                         az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%
                         az webapp deploy --resource-group %RESOURCE_GROUP% --name %APP_SERVICE_NAME% --src-path publish.zip --type zip
@@ -44,7 +45,7 @@ pipeline {
 
     post {
         success {
-            echo ' Deployment Successful!'
+            echo 'Deployment Successful!'
         }
         failure {
             echo ' Deployment Failed!'
