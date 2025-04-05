@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     environment {
         AZURE_CREDENTIALS_ID = 'azure-service-principal'
         RESOURCE_GROUP = 'rg-jenkins'
@@ -10,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Avinash739jecrc/jenkinrepo'
+                git branch: 'master', url: 'https://github.com/Avinash739jecrc/jenkinrepo'
             }
         }
 
@@ -18,24 +17,16 @@ pipeline {
             steps {
                 bat 'dotnet restore'
                 bat 'dotnet build --configuration Release'
-                bat 'dotnet publish -c Release -o publish'
+                bat 'dotnet publish -c Release -o ./publish'
             }
         }
 
-        stage('Zip for Azure') {
-            steps {
-                // Zip only the *contents* of the publish directory, not the directory itself
-                bat 'powershell -Command "Compress-Archive -Path publish\\* -DestinationPath publish.zip -Force"'
-            }
-        }
-
-        stage('Azure Deploy') {
+        stage('Deploy') {
             steps {
                 withCredentials([azureServicePrincipal(credentialsId: AZURE_CREDENTIALS_ID)]) {
-                    bat '''
-                        az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%
-                        az webapp deploy --resource-group %RESOURCE_GROUP% --name %APP_SERVICE_NAME% --src-path publish.zip --type zip
-                    '''
+                    bat "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID"
+                    bat "powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force"
+                    bat "az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_SERVICE_NAME --src-path ./publish.zip --type zip"
                 }
             }
         }
@@ -43,10 +34,10 @@ pipeline {
 
     post {
         success {
-            echo ' Deployment Successful!'
+            echo 'Deployment Successful!'
         }
         failure {
-            echo ' Deployment Failed!'
+            echo 'Deployment Failed!'
         }
     }
 }
